@@ -46,7 +46,7 @@ def populate_my_orders():
 
 def update_my_order_prices(my_order, currentIndex, my_orders_len):
     live_orders = []
-    print(str(currentIndex+1) +"/"+str(my_orders_len)+" | "+"Current order: "+my_order.toString())
+    print_log = str(currentIndex+1) +"/"+str(my_orders_len)+" | "+"Current order: "+my_order.toString()
     logging.info("***Current order: "+my_order.toString()+"***")
     raw_live_orders = request.get(logging, full_url("/v2/orders/item/"+my_order.item_id+"/top"), headers).get("sell")
     for index, raw_order in enumerate(raw_live_orders):
@@ -61,8 +61,10 @@ def update_my_order_prices(my_order, currentIndex, my_orders_len):
         request.patch(logging, full_url("/v2/order/"+my_order.id), headers, {
             "platinum":calculated_sell_price
         })
+        print(print_log+" | Price updated")
     else:
         logging.info("Calculated Price 0 or not changed, not updating order")
+        print(print_log)
     logging.info("---------------------------------------------------------------")
     return should_sell
 
