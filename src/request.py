@@ -1,6 +1,10 @@
 import requests
 import json
 
+def log_and_print(logging, string):
+    logging.info(string)
+    print(string)
+
 def get(logging, url, headers=None):
     try:
         response = requests.get(url, headers=headers)
@@ -8,13 +12,14 @@ def get(logging, url, headers=None):
         if response.status_code == 200:
             return response.json().get("data")
         elif response.status_code == 401:
-            logging.info("Error: Unauthorized. Your cookie/JWT might be expired or incorrect.")
+            log_and_print(logging, "Error: Unauthorized. Your cookie/JWT might be expired or incorrect.")
         else:
-            logging.info(f"Failed to retrieve orders. Status Code: {response.status_code}")
-            logging.info(response.text)
+            log_and_print(logging, f"Failed to retrieve data. Status Code: {response.status_code}")
+            log_and_print(logging, f"Failed GET: {url}")
+            log_and_print(logging, response.text)
 
     except requests.exceptions.RequestException as e:
-        logging.info(f"An error occurred: {e}")
+        log_and_print(logging, f"An error occurred: {e}")
 
     return False
 
@@ -31,15 +36,15 @@ def patch(logging, url, headers, payload):
                 return True
                 
         elif response.status_code == 401:
-            logging.info("Error: Unauthorized. Check your credentials/tokens.")
+            log_and_print(logging, "Error: Unauthorized. Check your credentials/tokens.")
         elif response.status_code == 404:
-            logging.info("Error: Resource not found. Check the URL.")
+            log_and_print(logging, "Error: Resource not found. Check the URL.")
         else:
-            logging.info(f"Failed to update. Status Code: {response.status_code}")
-            logging.info(response.text)
+            log_and_print(logging, f"Failed to update. Status Code: {response.status_code}")
+            log_and_print(logging, response.text)
 
     except requests.exceptions.RequestException as e:
-        logging.info(f"An error occurred: {e}")
+        log_and_print(logging, f"An error occurred: {e}")
 
     return False
 
@@ -55,15 +60,36 @@ def post(logging, url, headers, payload):
                 return True
                 
         elif response.status_code == 401:
-            logging.info("Error: Unauthorized. Check your credentials/tokens.")
+            log_and_print(logging, "Error: Unauthorized. Check your credentials/tokens.")
         elif response.status_code == 404:
-            logging.info("Error: Resource not found. Check the URL.")
+            log_and_print(logging, "Error: Resource not found. Check the URL.")
         else:
-            logging.info(f"Failed to post. Status Code: {response.status_code}")
-            logging.info(response.text)
+            log_and_print(logging, f"Failed to post. Status Code: {response.status_code}")
+            log_and_print(logging, response.text)
 
     except requests.exceptions.RequestException as e:
-        logging.info(f"An error occurred: {e}")
+        log_and_print(logging, f"An error occurred: {e}")
+
+    return False
+
+def delete(url, headers=None):
+    try:
+        response = requests.delete(url, headers=headers)
+
+        if response.status_code in [200, 204]:
+            print("Successfully deleted the resource.")
+            return response.json().get("data") if response.status_code == 200 else True
+            
+        elif response.status_code == 401:
+            print("Error: Unauthorized. Your cookie/JWT might be expired or incorrect.")
+        elif response.status_code == 404:
+            print("Error: Resource not found. It may have already been deleted.")
+        else:
+            print(f"Failed to delete. Status Code: {response.status_code}")
+            print(response.text)
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
 
     return False
 

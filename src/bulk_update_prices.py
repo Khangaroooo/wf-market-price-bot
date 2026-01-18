@@ -42,18 +42,22 @@ def populate_my_orders():
     for raw_order in my_raw_orders:
         order = Order(raw_order)
         my_orders.append(order)
-    return False
+    return True
 
-def update_my_order_prices(my_order, currentIndex, my_orders_len):
+def retrieve_live_orders(my_order):
     live_orders = []
-    print_log = str(currentIndex+1) +"/"+str(my_orders_len)+" | "+"Current order: "+my_order.toString()
-    logging.info("***Current order: "+my_order.toString()+"***")
-    raw_live_orders = request.get(logging, full_url("/v2/orders/item/"+my_order.item_id+"/top"), headers).get("sell")
+    raw_live_orders = request.get(logging, full_url("/v2/orders/item/"+my_order.item_id+"/top"), headers)
+    if(raw_live_orders == False):
+        return False
+    raw_live_orders = raw_live_orders.get("sell")
     for index, raw_order in enumerate(raw_live_orders):
         order = Order(raw_order)
         live_orders.append(order)
         logging.info("Live order "+str(index)+": "+order.toString())
+    return live_orders
 
+def calculate_update_order(my_order, live_orders, current_index, my_orders_len):
+    print_log = str(current_index+1) +"/"+str(my_orders_len)+" | "+"Current order: "+my_order.toString()
     calculated_sell_price = sell_price.calculate(my_order, live_orders)
     logging.info("Calculated price: "+str(calculated_sell_price)+" | Current Price: "+str(my_order.platinum))
     should_sell = sell_price.should_sell(my_order, calculated_sell_price)
@@ -61,25 +65,34 @@ def update_my_order_prices(my_order, currentIndex, my_orders_len):
         request.patch(logging, full_url("/v2/order/"+my_order.id), headers, {
             "platinum":calculated_sell_price
         })
-        print(print_log+" | Price updated")
+        print(print_log+" | Price updated:"+str(my_order.platinum)+" -> "+str(calculated_sell_price))
     else:
         logging.info("Calculated Price 0 or not changed, not updating order")
         print(print_log)
     logging.info("---------------------------------------------------------------")
     return should_sell
 
+
+def update_my_order_prices(my_order, current_index, my_orders_len):
+    logging.info("***Current order: "+my_order.toString()+"***")
+
+    live_orders = function_interval(retrieve_live_orders, my_order)
+    function_interval(calculate_update_order, my_order, live_orders, current_index, my_orders_len)
+
 def function_interval(function, *args):
     start_time = time.perf_counter()
-    interval = 0.67 if function(*args) == True else 0.34
+    res = function(*args)
+    interval = 0 if res == False else 0.34
     elapsed_time = time.perf_counter() - start_time
     sleep_time = interval - elapsed_time
     if(sleep_time > 0):
         time.sleep(sleep_time)
+    return res
 
 def main():
     function_interval(populate_my_orders)
     my_orders_len = len(my_orders)
     for index, order in enumerate(my_orders):
-        function_interval(update_my_order_prices, order, index, my_orders_len)
+        update_my_order_prices(order, index, my_orders_len)
 
-    # function_interval(update_my_order_prices, my_orders[0], 0, my_orders_len)
+    # update_my_order_prices(my_orders[0], index, my_orders_len)
