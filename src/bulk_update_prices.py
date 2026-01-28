@@ -77,7 +77,8 @@ def update_my_order_prices(my_order, current_index, my_orders_len):
     logging.info("***Current order: "+my_order.toString()+"***")
 
     live_orders = function_interval(retrieve_live_orders, my_order)
-    function_interval(calculate_update_order, my_order, live_orders, current_index, my_orders_len)
+    if(live_orders != False):
+        function_interval(calculate_update_order, my_order, live_orders, current_index, my_orders_len)
 
 def function_interval(function, *args):
     start_time = time.perf_counter()
