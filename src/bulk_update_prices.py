@@ -91,9 +91,11 @@ def function_interval(function, *args):
     return res
 
 def main():
-    function_interval(populate_my_orders)
-    my_orders_len = len(my_orders)
-    for index, order in enumerate(my_orders):
-        update_my_order_prices(order, index, my_orders_len)
+    while True:
+        my_orders.clear()
+        function_interval(populate_my_orders)
+        my_orders_len = len(my_orders)
+        for index, order in enumerate(my_orders):
+            update_my_order_prices(order, index, my_orders_len)
 
     # update_my_order_prices(my_orders[0], index, my_orders_len)
